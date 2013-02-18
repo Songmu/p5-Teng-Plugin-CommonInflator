@@ -74,8 +74,7 @@ This document describes Teng::Plugin::CommonInflator version 0.01.
     __PACKAGE__->load_plugin('CommonInflator');
 
     package main;
-    my $schema;
-    my $teng = My::DB->new(schema => $schema);
+    my $teng = My::DB->new;
 
     $teng->add_common_inflator(
         qr/_at$/ => sub {
