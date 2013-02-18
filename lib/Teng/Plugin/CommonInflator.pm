@@ -1,7 +1,7 @@
 package Teng::Plugin::CommonInflator;
 use strict;
 use warnings;
-
+use 5.008_001;
 use Carp qw/carp croak/;
 
 our $VERSION = '0.01';
@@ -40,12 +40,16 @@ sub _call_each_table {
     }
     croak '(in|de)flate rule is not specified!' unless $rule;
 
+    if ( ref $rule ne 'Regexp' ) {
+        $rule = qr/^\Q$rule\E$/;
+    }
     my %exclude = map {($_ => 1)} @{$exclude || []};
     my $tables = $self->schema->tables;
     for my $table_name (keys %$tables) {
         next if $exclude{$table_name};
 
         my $table = $tables->{$table_name};
+        next unless grep {/$rule/} @{$table->columns};
         $table->$method($rule => $code);
     }
 
