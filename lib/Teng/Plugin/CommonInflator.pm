@@ -1,10 +1,56 @@
 package Teng::Plugin::CommonInflator;
-use 5.008_001;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+use Carp qw/carp croak/;
 
+our $VERSION = '0.01';
+our @EXPORT = qw/add_common_inflator add_common_deflator/;
+
+sub add_common_inflator {
+    my $self = shift;
+
+    _call_each_table($self, 'add_inflator', @_);
+}
+
+sub add_common_deflator {
+    my $self = shift;
+
+    _call_each_table($self, 'add_deflator', @_);
+}
+
+sub _call_each_table {
+    my ($self, $method, @args) = @_;
+    croak 'Odd number of elements in assignment.' if @args % 2;
+
+    my ($rule, $code, $exclude);
+    while (my ($key, $val) = splice @args, 0, 2) {
+        if (ref($val) eq 'CODE') {
+            $rule = $key;
+            $code = $val;
+        }
+        elsif ($key eq 'exclude') {
+            $val = [$val] unless ref $val;
+            croak 'exclude value is invalid! (should be array_ref or scalar).' unless ref($val) eq 'ARRAY';
+            $exclude = $val;
+        }
+        else {
+            carp "unknown argument [$key].";
+        }
+    }
+    croak '(in|de)flate rule is not specified!' unless $rule;
+
+    my %exclude = map {($_ => 1)} @{$exclude || []};
+    my $tables = $self->schema->tables;
+    for my $table_name (keys %$tables) {
+        next if $exclude{$table_name};
+
+        my $table = $tables->{$table_name};
+        $table->$method($rule => $code);
+    }
+
+    $self;
+}
 
 1;
 __END__
