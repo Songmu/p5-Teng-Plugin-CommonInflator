@@ -69,7 +69,29 @@ This document describes Teng::Plugin::CommonInflator version 0.01.
 
 =head1 SYNOPSIS
 
-    use Teng::Plugin::CommonInflator;
+    package My::DB;
+    use parent qw/Teng/;
+    __PACKAGE__->load_plugin('CommonInflator');
+
+    package main;
+    my $schema;
+    my $teng = My::DB->new(schema => $schema);
+
+    $teng->add_common_inflator(
+        qr/_at$/ => sub {
+            my $col_value = shift;
+            ...
+            $col_value;
+        },
+        exclude => [qw/user/], # exclude tables
+    );
+
+    $teng->add_common_deflator(qr/_at$/ => sub {
+        my $col_value = shift;
+        ...
+        $col_value;
+    });
+
 
 =head1 DESCRIPTION
 
